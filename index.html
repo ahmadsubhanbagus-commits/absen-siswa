@@ -1,0 +1,1697 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventaris Buku Perpustakaan SMAN 1 Air Hitam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .marquee {
+            overflow: hidden;
+            white-space: nowrap;
+            animation: scroll 25s linear infinite;
+        }
+        
+        .marquee-text {
+            display: inline-block;
+        }
+        
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        .menu-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        
+        .menu-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        .digital-clock {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        
+        .form-container {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        
+        .table-container {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+        
+        .input-field {
+            transition: all 0.3s ease;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">
+    <!-- Header dengan jam digital dan logout -->
+    <header class="page-header shadow-xl p-6 flex justify-between items-center sticky top-0 z-40">
+        <div class="flex items-center space-x-4">
+            <div class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                📚 Perpustakaan SMAN 1 Air Hitam
+            </div>
+        </div>
+        <div class="flex items-center space-x-6">
+            <div class="digital-clock" id="digitalClock">
+                00:00:00
+            </div>
+            <div class="digital-clock" id="digitalDate">
+                00/00/0000
+            </div>
+            <button onclick="logout()" class="btn-danger text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105" id="logoutBtn" style="display: none;">
+                🚪 Logout
+            </button>
+        </div>
+    </header>
+    
+    <!-- Tulisan Berjalan -->
+    <div class="bg-gradient-to-r from-purple-400 to-pink-400 text-white p-3 overflow-hidden">
+        <div class="marquee">
+            <div class="marquee-text text-white text-xl font-semibold">
+                📚 Inventaris Buku Perpustakaan SMAN 1 Air Hitam - Pembuat: Ahmad Subhan, S.Kom Guru TJKT SMKN 1 Liwa 📚
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Login -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-indigo-100 via-purple-50 to-blue-100">
+        <div class="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-10 w-full max-w-md border border-white/20">
+            <div class="text-center mb-10">
+                <div class="text-6xl mb-4">🔐</div>
+                <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">Login Admin</h1>
+                <h2 class="text-lg text-blue-600 font-semibold">Inventaris Buku Perpustakaan</h2>
+                <h3 class="text-md text-gray-600 font-medium">SMAN 1 Air Hitam</h3>
+            </div>
+            <form onsubmit="login(event)" class="space-y-6">
+                <div>
+                    <label for="username" class="block text-gray-700 text-sm font-semibold mb-3">👤 Username:</label>
+                    <input type="text" id="username" class="input-field w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="Masukkan username" required>
+                </div>
+                <div>
+                    <label for="password" class="block text-gray-700 text-sm font-semibold mb-3">🔑 Password:</label>
+                    <input type="password" id="password" class="input-field w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="Masukkan password" required>
+                </div>
+                <button type="submit" class="btn-primary w-full text-white font-bold py-4 px-6 rounded-xl text-lg">
+                    🚀 Masuk ke Sistem
+                </button>
+            </form>
+            <div class="mt-6 text-center text-sm text-gray-500">
+                <p>Default: Admin / 1234</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Beranda -->
+    <div id="homePage" class="container mx-auto p-8" style="display: none;">
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+                Dashboard Inventaris Buku
+            </h1>
+            <p class="text-xl text-gray-600 font-medium">Sistem Manajemen Perpustakaan Modern</p>
+        </div>
+        
+
+        
+        <!-- Menu Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div class="menu-card bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 text-center cursor-pointer group" onclick="showPage('inputBuku')">
+                <div class="text-3xl mb-3 group-hover:scale-125 transition-transform duration-300">📖</div>
+                <h3 class="text-sm font-bold text-gray-800 mb-1">Input Data Buku</h3>
+                <p class="text-xs text-gray-600">Tambah buku baru</p>
+            </div>
+            
+            <div class="menu-card bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 text-center cursor-pointer group" onclick="showPage('databaseBuku')">
+                <div class="text-3xl mb-3 group-hover:scale-125 transition-transform duration-300">📚</div>
+                <h3 class="text-sm font-bold text-gray-800 mb-1">Database Buku</h3>
+                <p class="text-xs text-gray-600">Koleksi buku</p>
+            </div>
+            
+            <div class="menu-card bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 text-center cursor-pointer group" onclick="showPage('peminjaman')">
+                <div class="text-3xl mb-3 group-hover:scale-125 transition-transform duration-300">📤</div>
+                <h3 class="text-sm font-bold text-gray-800 mb-1">Peminjaman</h3>
+                <p class="text-xs text-gray-600">Pinjam buku</p>
+            </div>
+            
+            <div class="menu-card bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 text-center cursor-pointer group" onclick="showPage('pengembalian')">
+                <div class="text-3xl mb-3 group-hover:scale-125 transition-transform duration-300">📥</div>
+                <h3 class="text-sm font-bold text-gray-800 mb-1">Pengembalian</h3>
+                <p class="text-xs text-gray-600">Kembalikan buku</p>
+            </div>
+            
+            <div class="menu-card bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 text-center cursor-pointer group" onclick="showPage('editBuku')">
+                <div class="text-3xl mb-3 group-hover:scale-125 transition-transform duration-300">✏️</div>
+                <h3 class="text-sm font-bold text-gray-800 mb-1">Edit Buku</h3>
+                <p class="text-xs text-gray-600">Ubah data buku</p>
+            </div>
+            
+            <div class="menu-card bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 text-center cursor-pointer group" onclick="showPage('hapusBuku')">
+                <div class="text-3xl mb-3 group-hover:scale-125 transition-transform duration-300">🗑️</div>
+                <h3 class="text-sm font-bold text-gray-800 mb-1">Hapus Buku</h3>
+                <p class="text-xs text-gray-600">Hapus dari database</p>
+            </div>
+            
+            <div class="menu-card bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 text-center cursor-pointer group" onclick="showPage('bukuRusak')">
+                <div class="text-3xl mb-3 group-hover:scale-125 transition-transform duration-300">📕</div>
+                <h3 class="text-sm font-bold text-gray-800 mb-1">Buku Rusak</h3>
+                <p class="text-xs text-gray-600">Data buku rusak</p>
+            </div>
+            
+            <div class="menu-card bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 text-center cursor-pointer group" onclick="showPage('laporan')">
+                <div class="text-3xl mb-3 group-hover:scale-125 transition-transform duration-300">📊</div>
+                <h3 class="text-sm font-bold text-gray-800 mb-1">Cetak Laporan</h3>
+                <p class="text-xs text-gray-600">PDF & Excel</p>
+            </div>
+            
+            <div class="menu-card bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 text-center cursor-pointer group" onclick="showPage('importData')">
+                <div class="text-3xl mb-3 group-hover:scale-125 transition-transform duration-300">📥</div>
+                <h3 class="text-sm font-bold text-gray-800 mb-1">Import Data</h3>
+                <p class="text-xs text-gray-600">Backup & restore</p>
+            </div>
+            
+            <div class="menu-card bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 text-center cursor-pointer group" onclick="showPage('pengaturan')">
+                <div class="text-3xl mb-3 group-hover:scale-125 transition-transform duration-300">⚙️</div>
+                <h3 class="text-sm font-bold text-gray-800 mb-1">Pengaturan</h3>
+                <p class="text-xs text-gray-600">Konfigurasi sistem</p>
+            </div>
+            
+            <div class="menu-card bg-white/90 backdrop-blur-sm rounded-xl shadow-lg p-4 text-center cursor-pointer group" onclick="showPage('profil')">
+                <div class="text-3xl mb-3 group-hover:scale-125 transition-transform duration-300">👤</div>
+                <h3 class="text-sm font-bold text-gray-800 mb-1">Profil Pembuat</h3>
+                <p class="text-xs text-gray-600">Info developer</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Input Data Buku -->
+    <div id="inputBuku" class="container mx-auto p-8" style="display: none;">
+        <div class="form-container rounded-3xl shadow-2xl p-8 border">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">📖 Input Data Buku</h2>
+                    <p class="text-gray-600 mt-2">Tambahkan buku baru ke dalam database perpustakaan</p>
+                </div>
+                <button onclick="showPage('homePage')" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105">
+                    ← Kembali
+                </button>
+            </div>
+            
+            <form onsubmit="tambahBuku(event)" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="namaBuku" class="block text-gray-700 font-semibold mb-3">📚 Nama Buku:</label>
+                    <input type="text" id="namaBuku" class="input-field w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="Masukkan nama buku" required>
+                </div>
+                
+                <div>
+                    <label for="kodeBuku" class="block text-gray-700 font-semibold mb-3">🏷️ Kode Buku:</label>
+                    <input type="text" id="kodeBuku" class="input-field w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="Masukkan kode buku" required>
+                </div>
+                
+                <div>
+                    <label for="kondisiBuku" class="block text-gray-700 font-semibold mb-3">📋 Kondisi Buku:</label>
+                    <select id="kondisiBuku" class="input-field w-full px-4 py-3 rounded-xl focus:outline-none" required>
+                        <option value="">Pilih Kondisi</option>
+                        <option value="Baik">✅ Baik</option>
+                        <option value="Cukup">⚠️ Cukup</option>
+                        <option value="Rusak">❌ Rusak</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="jumlahBuku" class="block text-gray-700 font-semibold mb-3">🔢 Jumlah Buku:</label>
+                    <input type="number" id="jumlahBuku" min="1" class="input-field w-full px-4 py-3 rounded-xl focus:outline-none" placeholder="Masukkan jumlah" required>
+                </div>
+                
+                <div class="md:col-span-2 mt-4">
+                    <button type="submit" class="btn-primary text-white font-bold py-4 px-8 rounded-xl text-lg w-full md:w-auto">
+                        ➕ Tambah Buku ke Database
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Halaman Database Buku -->
+    <div id="databaseBuku" class="container mx-auto p-8" style="display: none;">
+        <div class="table-container p-8">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">📚 Database Buku</h2>
+                    <p class="text-gray-600 mt-2">Koleksi lengkap buku perpustakaan</p>
+                </div>
+                <button onclick="showPage('homePage')" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105">
+                    ← Kembali
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto rounded-2xl border border-gray-200">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+                            <th class="px-6 py-4 text-left font-semibold">No</th>
+                            <th class="px-6 py-4 text-left font-semibold">Nama Buku</th>
+                            <th class="px-6 py-4 text-left font-semibold">Kode Buku</th>
+                            <th class="px-6 py-4 text-left font-semibold">Kondisi</th>
+                            <th class="px-6 py-4 text-left font-semibold">Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelBuku" class="divide-y divide-gray-200">
+                        <!-- Data akan diisi oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Peminjaman Buku -->
+    <div id="peminjaman" class="container mx-auto p-6" style="display: none;">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Peminjaman Buku</h2>
+                <button onclick="showPage('homePage')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Kembali</button>
+            </div>
+            
+            <form onsubmit="pinjamBuku(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label for="namaPeminjam" class="block text-gray-700 font-semibold mb-2">Nama Peminjam:</label>
+                    <input type="text" id="namaPeminjam" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
+                
+                <div>
+                    <label for="tanggalPinjam" class="block text-gray-700 font-semibold mb-2">Tanggal Pinjam:</label>
+                    <input type="date" id="tanggalPinjam" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
+                
+                <div>
+                    <label for="bukuPinjam" class="block text-gray-700 font-semibold mb-2">Pilih Buku:</label>
+                    <select id="bukuPinjam" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required onchange="updateKodePinjam()">
+                        <option value="">Pilih Buku</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="kodePinjam" class="block text-gray-700 font-semibold mb-2">Kode Buku:</label>
+                    <input type="text" id="kodePinjam" class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100" readonly>
+                </div>
+                
+                <div>
+                    <label for="jumlahPinjam" class="block text-gray-700 font-semibold mb-2">Jumlah Pinjam:</label>
+                    <input type="number" id="jumlahPinjam" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
+                
+                <div class="md:col-span-2">
+                    <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg">Pinjam Buku</button>
+                </div>
+            </form>
+            
+            <div class="overflow-x-auto">
+                <h3 class="text-xl font-bold mb-4">Data Peminjaman</h3>
+                <table class="w-full border-collapse border border-gray-300">
+                    <thead>
+                        <tr class="bg-green-500 text-white">
+                            <th class="border border-gray-300 px-4 py-2">No</th>
+                            <th class="border border-gray-300 px-4 py-2">Nama Peminjam</th>
+                            <th class="border border-gray-300 px-4 py-2">Tanggal</th>
+                            <th class="border border-gray-300 px-4 py-2">Nama Buku</th>
+                            <th class="border border-gray-300 px-4 py-2">Kode Buku</th>
+                            <th class="border border-gray-300 px-4 py-2">Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelPeminjaman">
+                        <!-- Data akan diisi oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Pengembalian Buku -->
+    <div id="pengembalian" class="container mx-auto p-6" style="display: none;">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Pengembalian Buku</h2>
+                <button onclick="showPage('homePage')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Kembali</button>
+            </div>
+            
+            <form onsubmit="kembalikanBuku(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label for="namaKembali" class="block text-gray-700 font-semibold mb-2">Nama yang Mengembalikan:</label>
+                    <input type="text" id="namaKembali" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
+                
+                <div>
+                    <label for="tanggalKembali" class="block text-gray-700 font-semibold mb-2">Tanggal Kembali:</label>
+                    <input type="date" id="tanggalKembali" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
+                
+                <div>
+                    <label for="kodeKembali" class="block text-gray-700 font-semibold mb-2">Kode Buku:</label>
+                    <input type="text" id="kodeKembali" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
+                
+                <div>
+                    <label for="jumlahKembali" class="block text-gray-700 font-semibold mb-2">Jumlah Kembali:</label>
+                    <input type="number" id="jumlahKembali" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
+                
+                <div class="md:col-span-2">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">Kembalikan Buku</button>
+                </div>
+            </form>
+            
+            <div class="overflow-x-auto">
+                <h3 class="text-xl font-bold mb-4">Data Pengembalian</h3>
+                <table class="w-full border-collapse border border-gray-300">
+                    <thead>
+                        <tr class="bg-blue-500 text-white">
+                            <th class="border border-gray-300 px-4 py-2">No</th>
+                            <th class="border border-gray-300 px-4 py-2">Nama</th>
+                            <th class="border border-gray-300 px-4 py-2">Tanggal</th>
+                            <th class="border border-gray-300 px-4 py-2">Kode Buku</th>
+                            <th class="border border-gray-300 px-4 py-2">Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelPengembalian">
+                        <!-- Data akan diisi oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Laporan -->
+    <div id="laporan" class="container mx-auto p-6" style="display: none;">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Cetak Laporan</h2>
+                <button onclick="showPage('homePage')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Kembali</button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button onclick="cetakLaporanBuku('pdf')" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg">
+                    📄 Cetak Laporan Data Buku (PDF)
+                </button>
+                
+                <button onclick="cetakLaporanBuku('excel')" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg">
+                    📊 Cetak Laporan Data Buku (Excel)
+                </button>
+                
+                <button onclick="cetakLaporanPeminjaman('pdf')" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg">
+                    📄 Cetak Laporan Peminjaman (PDF)
+                </button>
+                
+                <button onclick="cetakLaporanPeminjaman('excel')" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg">
+                    📊 Cetak Laporan Peminjaman (Excel)
+                </button>
+                
+                <button onclick="cetakLaporanBukuRusak('pdf')" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg">
+                    📄 Cetak Laporan Buku Rusak (PDF)
+                </button>
+                
+                <button onclick="cetakLaporanBukuRusak('excel')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-lg">
+                    📊 Cetak Laporan Buku Rusak (Excel)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Hapus Buku -->
+    <div id="hapusBuku" class="container mx-auto p-6" style="display: none;">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Hapus Buku</h2>
+                <button onclick="showPage('homePage')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Kembali</button>
+            </div>
+            
+            <form onsubmit="hapusBukuItem(event)" class="mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="bukuHapus" class="block text-gray-700 font-semibold mb-2">Pilih Buku yang akan dihapus:</label>
+                        <select id="bukuHapus" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                            <option value="">Pilih Buku</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex items-end">
+                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg">Hapus Buku</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Halaman Edit Buku -->
+    <div id="editBuku" class="container mx-auto p-6" style="display: none;">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Edit Buku</h2>
+                <button onclick="showPage('homePage')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Kembali</button>
+            </div>
+            
+            <form onsubmit="editBukuItem(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="bukuEdit" class="block text-gray-700 font-semibold mb-2">Pilih Buku:</label>
+                    <select id="bukuEdit" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required onchange="loadBukuEdit()">
+                        <option value="">Pilih Buku</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="namaBukuEdit" class="block text-gray-700 font-semibold mb-2">Nama Buku Baru:</label>
+                    <input type="text" id="namaBukuEdit" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
+                
+                <div>
+                    <label for="kodeBukuEdit" class="block text-gray-700 font-semibold mb-2">Kode Buku Baru:</label>
+                    <input type="text" id="kodeBukuEdit" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
+                
+                <div>
+                    <label for="kondisiBukuEdit" class="block text-gray-700 font-semibold mb-2">Kondisi Buku:</label>
+                    <select id="kondisiBukuEdit" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                        <option value="Baik">Baik</option>
+                        <option value="Cukup">Cukup</option>
+                        <option value="Rusak">Rusak</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="jumlahBukuEdit" class="block text-gray-700 font-semibold mb-2">Jumlah Buku:</label>
+                    <input type="number" id="jumlahBukuEdit" min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" required>
+                </div>
+                
+                <div class="md:col-span-2">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">Update Buku</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Halaman Buku Rusak -->
+    <div id="bukuRusak" class="container mx-auto p-6" style="display: none;">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Data Buku Rusak</h2>
+                <button onclick="showPage('homePage')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Kembali</button>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse border border-gray-300">
+                    <thead>
+                        <tr class="bg-red-500 text-white">
+                            <th class="border border-gray-300 px-4 py-2">No</th>
+                            <th class="border border-gray-300 px-4 py-2">Nama Buku</th>
+                            <th class="border border-gray-300 px-4 py-2">Kode Buku</th>
+                            <th class="border border-gray-300 px-4 py-2">Tanggal Rusak</th>
+                            <th class="border border-gray-300 px-4 py-2">Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelBukuRusak">
+                        <!-- Data akan diisi oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Pengaturan -->
+    <div id="pengaturan" class="container mx-auto p-6" style="display: none;">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Pengaturan</h2>
+                <button onclick="showPage('homePage')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Kembali</button>
+            </div>
+            
+            <form onsubmit="simpanPengaturan(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="tanggalLaporan" class="block text-gray-700 font-semibold mb-2">Tanggal Laporan:</label>
+                    <input type="date" id="tanggalLaporan" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="namaKepala" class="block text-gray-700 font-semibold mb-2">Nama Kepala Perpustakaan:</label>
+                    <input type="text" id="namaKepala" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="nipKepala" class="block text-gray-700 font-semibold mb-2">NIP Kepala:</label>
+                    <input type="text" id="nipKepala" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="logoLaporan" class="block text-gray-700 font-semibold mb-2">Logo Laporan (URL):</label>
+                    <input type="url" id="logoLaporan" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                
+                <div>
+                    <label for="logoUpload" class="block text-gray-700 font-semibold mb-2">Upload Logo:</label>
+                    <input type="file" id="logoUpload" accept="image/*" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" onchange="uploadLogo()">
+                    <div id="logoPreview" class="mt-2 text-center">
+                        <!-- Logo preview akan muncul di sini -->
+                    </div>
+                </div>
+                
+                <div class="md:col-span-2">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">Simpan Pengaturan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Halaman Import Data -->
+    <div id="importData" class="container mx-auto p-6" style="display: none;">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Import & Backup Data</h2>
+                <button onclick="showPage('homePage')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Kembali</button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Import Data dari Excel</h3>
+                    <input type="file" id="fileImport" accept=".xlsx,.xls" class="mb-4">
+                    <button onclick="importDataExcel()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg w-full">
+                        Import Data
+                    </button>
+                </div>
+                
+                <div class="border-2 border-gray-300 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold mb-4">Backup & Restore</h3>
+                    <button onclick="backupData()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg w-full mb-2">
+                        Backup Data
+                    </button>
+                    <input type="file" id="fileRestore" accept=".json" class="mb-2">
+                    <button onclick="restoreData()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg w-full">
+                        Restore Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Profil Pembuat -->
+    <div id="profil" class="container mx-auto p-6" style="display: none;">
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Profil Pembuat</h2>
+                <button onclick="showPage('homePage')" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">Kembali</button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="text-center">
+                    <div class="w-32 h-32 bg-gray-300 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl" id="profilePhoto">
+                        👤
+                    </div>
+                    <input type="file" id="photoUpload" accept="image/*" class="mb-2" onchange="uploadPhoto()">
+                    <button onclick="document.getElementById('photoUpload').click()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                        Upload Photo
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="font-semibold text-gray-700">Nama:</h3>
+                        <p class="text-gray-600">AHMAD SUBHAN, S.Kom</p>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-semibold text-gray-700">Jabatan:</h3>
+                        <p class="text-gray-600">Guru TJKT SMKN 1 LIWA</p>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-semibold text-gray-700">Alamat:</h3>
+                        <p class="text-gray-600">DESA SUMBER ALAM KEC. Air Hitam Kabupaten Lampung Barat</p>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-semibold text-gray-700">Email:</h3>
+                        <p class="text-gray-600">ahmadsubhanbagus@gmail.com</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Storage
+        let dataBuku = JSON.parse(localStorage.getItem('dataBuku')) || [];
+        let dataPeminjaman = JSON.parse(localStorage.getItem('dataPeminjaman')) || [];
+        let dataPengembalian = JSON.parse(localStorage.getItem('dataPengembalian')) || [];
+        let dataBukuRusak = JSON.parse(localStorage.getItem('dataBukuRusak')) || [];
+        let pengaturan = JSON.parse(localStorage.getItem('pengaturan')) || {
+            tanggalLaporan: '',
+            namaKepala: '',
+            nipKepala: '',
+            logoLaporan: ''
+        };
+
+        // Digital Clock and Date
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('id-ID');
+            const dateString = now.toLocaleDateString('id-ID');
+            document.getElementById('digitalClock').textContent = timeString;
+            document.getElementById('digitalDate').textContent = dateString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Login Function
+        function login(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username === 'Admin' && password === '1234') {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('homePage').style.display = 'block';
+                document.getElementById('logoutBtn').style.display = 'block';
+                loadAllData();
+            } else {
+                showNotification('Username atau password salah!', 'error');
+            }
+        }
+
+        // Logout Function
+        function logout() {
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('homePage').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'none';
+            hideAllPages();
+        }
+
+        // Show Page Function
+        function showPage(pageId) {
+            hideAllPages();
+            document.getElementById(pageId).style.display = 'block';
+            
+            if (pageId === 'peminjaman') {
+                loadBukuOptions('bukuPinjam');
+            } else if (pageId === 'hapusBuku') {
+                loadBukuOptions('bukuHapus');
+            } else if (pageId === 'editBuku') {
+                loadBukuOptions('bukuEdit');
+            } else if (pageId === 'databaseBuku') {
+                tampilkanTabelBuku();
+            } else if (pageId === 'bukuRusak') {
+                tampilkanTabelBukuRusak();
+            } else if (pageId === 'pengaturan') {
+                loadPengaturan();
+            }
+        }
+
+        // Hide All Pages
+        function hideAllPages() {
+            const pages = ['homePage', 'inputBuku', 'databaseBuku', 'peminjaman', 'pengembalian', 'laporan', 'hapusBuku', 'editBuku', 'bukuRusak', 'pengaturan', 'importData', 'profil'];
+            pages.forEach(page => {
+                document.getElementById(page).style.display = 'none';
+            });
+        }
+
+        // Load All Data
+        function loadAllData() {
+            tampilkanTabelBuku();
+            tampilkanTabelPeminjaman();
+            tampilkanTabelPengembalian();
+            tampilkanTabelBukuRusak();
+            updateStats();
+        }
+
+        // Update Statistics
+        function updateStats() {
+            const totalBuku = dataBuku.reduce((sum, buku) => sum + buku.jumlah, 0);
+            const totalPeminjaman = dataPeminjaman.length;
+            const totalPengembalian = dataPengembalian.length;
+            const totalBukuRusak = dataBukuRusak.length;
+            
+            document.getElementById('totalBuku').textContent = totalBuku;
+            document.getElementById('totalPeminjaman').textContent = totalPeminjaman;
+            document.getElementById('totalPengembalian').textContent = totalPengembalian;
+            document.getElementById('totalBukuRusak').textContent = totalBukuRusak;
+        }
+
+        // Tambah Buku
+        function tambahBuku(event) {
+            event.preventDefault();
+            const nama = document.getElementById('namaBuku').value;
+            const kode = document.getElementById('kodeBuku').value;
+            const kondisi = document.getElementById('kondisiBuku').value;
+            const jumlah = parseInt(document.getElementById('jumlahBuku').value);
+
+            // Check if kode already exists
+            if (dataBuku.find(buku => buku.kode === kode)) {
+                showNotification('Kode buku sudah ada!', 'error');
+                return;
+            }
+
+            const bukuBaru = {
+                id: Date.now(),
+                nama: nama,
+                kode: kode,
+                kondisi: kondisi,
+                jumlah: jumlah
+            };
+
+            dataBuku.push(bukuBaru);
+            localStorage.setItem('dataBuku', JSON.stringify(dataBuku));
+            
+            showNotification('Buku berhasil ditambahkan!', 'success');
+            updateStats();
+            document.getElementById('namaBuku').value = '';
+            document.getElementById('kodeBuku').value = '';
+            document.getElementById('kondisiBuku').value = '';
+            document.getElementById('jumlahBuku').value = '';
+        }
+
+        // Tampilkan Tabel Buku
+        function tampilkanTabelBuku() {
+            const tbody = document.getElementById('tabelBuku');
+            tbody.innerHTML = '';
+            
+            if (dataBuku.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            <div class="text-4xl mb-2">📚</div>
+                            <div class="text-lg font-semibold">Belum ada data buku</div>
+                            <div class="text-sm">Tambahkan buku pertama Anda</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            dataBuku.forEach((buku, index) => {
+                const kondisiIcon = buku.kondisi === 'Baik' ? '✅' : buku.kondisi === 'Cukup' ? '⚠️' : '❌';
+                const row = tbody.insertRow();
+                row.className = index % 2 === 0 ? 'bg-gray-50 hover:bg-blue-50' : 'bg-white hover:bg-blue-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-gray-900">${index + 1}</td>
+                    <td class="px-6 py-4 text-gray-800 font-medium">${buku.nama}</td>
+                    <td class="px-6 py-4 text-blue-600 font-mono font-semibold">${buku.kode}</td>
+                    <td class="px-6 py-4">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                            buku.kondisi === 'Baik' ? 'bg-green-100 text-green-800' :
+                            buku.kondisi === 'Cukup' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                        }">
+                            ${kondisiIcon} ${buku.kondisi}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-900 font-semibold">${buku.jumlah}</td>
+                `;
+            });
+        }
+
+        // Load Buku Options
+        function loadBukuOptions(selectId) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Pilih Buku</option>';
+            
+            dataBuku.forEach(buku => {
+                if (buku.jumlah > 0) {
+                    const option = document.createElement('option');
+                    option.value = buku.id;
+                    option.textContent = `${buku.nama} (Stok: ${buku.jumlah})`;
+                    select.appendChild(option);
+                }
+            });
+        }
+
+        // Update Kode Pinjam
+        function updateKodePinjam() {
+            const bukuId = document.getElementById('bukuPinjam').value;
+            const buku = dataBuku.find(b => b.id == bukuId);
+            document.getElementById('kodePinjam').value = buku ? buku.kode : '';
+        }
+
+        // Pinjam Buku
+        function pinjamBuku(event) {
+            event.preventDefault();
+            const namaPeminjam = document.getElementById('namaPeminjam').value;
+            const tanggal = document.getElementById('tanggalPinjam').value;
+            const bukuId = document.getElementById('bukuPinjam').value;
+            const jumlahPinjam = parseInt(document.getElementById('jumlahPinjam').value);
+
+            const buku = dataBuku.find(b => b.id == bukuId);
+            if (!buku || buku.jumlah < jumlahPinjam) {
+                showNotification('Stok buku tidak mencukupi!', 'error');
+                return;
+            }
+
+            // Update stok buku
+            buku.jumlah -= jumlahPinjam;
+            localStorage.setItem('dataBuku', JSON.stringify(dataBuku));
+
+            // Tambah data peminjaman
+            const peminjamanBaru = {
+                id: Date.now(),
+                namaPeminjam: namaPeminjam,
+                tanggal: tanggal,
+                namaBuku: buku.nama,
+                kodeBuku: buku.kode,
+                jumlah: jumlahPinjam
+            };
+
+            dataPeminjaman.push(peminjamanBaru);
+            localStorage.setItem('dataPeminjaman', JSON.stringify(dataPeminjaman));
+
+            showNotification('Buku berhasil dipinjam!', 'success');
+            tampilkanTabelPeminjaman();
+            loadBukuOptions('bukuPinjam');
+            
+            // Reset form
+            document.getElementById('namaPeminjam').value = '';
+            document.getElementById('tanggalPinjam').value = '';
+            document.getElementById('bukuPinjam').value = '';
+            document.getElementById('kodePinjam').value = '';
+            document.getElementById('jumlahPinjam').value = '';
+        }
+
+        // Tampilkan Tabel Peminjaman
+        function tampilkanTabelPeminjaman() {
+            const tbody = document.getElementById('tabelPeminjaman');
+            tbody.innerHTML = '';
+            
+            dataPeminjaman.forEach((pinjam, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td class="border border-gray-300 px-4 py-2">${index + 1}</td>
+                    <td class="border border-gray-300 px-4 py-2">${pinjam.namaPeminjam}</td>
+                    <td class="border border-gray-300 px-4 py-2">${pinjam.tanggal}</td>
+                    <td class="border border-gray-300 px-4 py-2">${pinjam.namaBuku}</td>
+                    <td class="border border-gray-300 px-4 py-2">${pinjam.kodeBuku}</td>
+                    <td class="border border-gray-300 px-4 py-2">${pinjam.jumlah}</td>
+                `;
+            });
+        }
+
+        // Kembalikan Buku
+        function kembalikanBuku(event) {
+            event.preventDefault();
+            const namaKembali = document.getElementById('namaKembali').value;
+            const tanggalKembali = document.getElementById('tanggalKembali').value;
+            const kodeKembali = document.getElementById('kodeKembali').value;
+            const jumlahKembali = parseInt(document.getElementById('jumlahKembali').value);
+
+            // Find book by code
+            const buku = dataBuku.find(b => b.kode === kodeKembali);
+            if (!buku) {
+                showNotification('Kode buku tidak ditemukan!', 'error');
+                return;
+            }
+
+            // Update stok buku
+            buku.jumlah += jumlahKembali;
+            localStorage.setItem('dataBuku', JSON.stringify(dataBuku));
+
+            // Tambah data pengembalian
+            const pengembalianBaru = {
+                id: Date.now(),
+                namaKembali: namaKembali,
+                tanggal: tanggalKembali,
+                kodeBuku: kodeKembali,
+                jumlah: jumlahKembali
+            };
+
+            dataPengembalian.push(pengembalianBaru);
+            localStorage.setItem('dataPengembalian', JSON.stringify(dataPengembalian));
+
+            showNotification('Buku berhasil dikembalikan!', 'success');
+            tampilkanTabelPengembalian();
+            
+            // Reset form
+            document.getElementById('namaKembali').value = '';
+            document.getElementById('tanggalKembali').value = '';
+            document.getElementById('kodeKembali').value = '';
+            document.getElementById('jumlahKembali').value = '';
+        }
+
+        // Tampilkan Tabel Pengembalian
+        function tampilkanTabelPengembalian() {
+            const tbody = document.getElementById('tabelPengembalian');
+            tbody.innerHTML = '';
+            
+            dataPengembalian.forEach((kembali, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td class="border border-gray-300 px-4 py-2">${index + 1}</td>
+                    <td class="border border-gray-300 px-4 py-2">${kembali.namaKembali}</td>
+                    <td class="border border-gray-300 px-4 py-2">${kembali.tanggal}</td>
+                    <td class="border border-gray-300 px-4 py-2">${kembali.kodeBuku}</td>
+                    <td class="border border-gray-300 px-4 py-2">${kembali.jumlah}</td>
+                `;
+            });
+        }
+
+        // Hapus Buku
+        function hapusBukuItem(event) {
+            event.preventDefault();
+            const bukuId = document.getElementById('bukuHapus').value;
+            const buku = dataBuku.find(b => b.id == bukuId);
+            
+            if (!buku) {
+                showNotification('Buku tidak ditemukan!', 'error');
+                return;
+            }
+
+            // Pindah ke buku rusak
+            const bukuRusak = {
+                id: Date.now(),
+                nama: buku.nama,
+                kode: buku.kode,
+                tanggalRusak: new Date().toISOString().split('T')[0],
+                jumlah: buku.jumlah
+            };
+
+            dataBukuRusak.push(bukuRusak);
+            localStorage.setItem('dataBukuRusak', JSON.stringify(dataBukuRusak));
+
+            // Hapus dari database buku
+            dataBuku = dataBuku.filter(b => b.id != bukuId);
+            localStorage.setItem('dataBuku', JSON.stringify(dataBuku));
+
+            showNotification('Buku berhasil dihapus dan dipindah ke buku rusak!', 'success');
+            loadBukuOptions('bukuHapus');
+            document.getElementById('bukuHapus').value = '';
+        }
+
+        // Edit Buku
+        function loadBukuEdit() {
+            const bukuId = document.getElementById('bukuEdit').value;
+            const buku = dataBuku.find(b => b.id == bukuId);
+            
+            if (buku) {
+                document.getElementById('namaBukuEdit').value = buku.nama;
+                document.getElementById('kodeBukuEdit').value = buku.kode;
+                document.getElementById('kondisiBukuEdit').value = buku.kondisi;
+                document.getElementById('jumlahBukuEdit').value = buku.jumlah;
+            }
+        }
+
+        function editBukuItem(event) {
+            event.preventDefault();
+            const bukuId = document.getElementById('bukuEdit').value;
+            const buku = dataBuku.find(b => b.id == bukuId);
+            
+            if (!buku) {
+                showNotification('Buku tidak ditemukan!', 'error');
+                return;
+            }
+
+            buku.nama = document.getElementById('namaBukuEdit').value;
+            buku.kode = document.getElementById('kodeBukuEdit').value;
+            buku.kondisi = document.getElementById('kondisiBukuEdit').value;
+            buku.jumlah = parseInt(document.getElementById('jumlahBukuEdit').value);
+
+            localStorage.setItem('dataBuku', JSON.stringify(dataBuku));
+            showNotification('Buku berhasil diupdate!', 'success');
+            
+            // Reset form
+            document.getElementById('bukuEdit').value = '';
+            document.getElementById('namaBukuEdit').value = '';
+            document.getElementById('kodeBukuEdit').value = '';
+            document.getElementById('kondisiBukuEdit').value = '';
+            document.getElementById('jumlahBukuEdit').value = '';
+        }
+
+        // Tampilkan Tabel Buku Rusak
+        function tampilkanTabelBukuRusak() {
+            const tbody = document.getElementById('tabelBukuRusak');
+            tbody.innerHTML = '';
+            
+            dataBukuRusak.forEach((buku, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td class="border border-gray-300 px-4 py-2">${index + 1}</td>
+                    <td class="border border-gray-300 px-4 py-2">${buku.nama}</td>
+                    <td class="border border-gray-300 px-4 py-2">${buku.kode}</td>
+                    <td class="border border-gray-300 px-4 py-2">${buku.tanggalRusak}</td>
+                    <td class="border border-gray-300 px-4 py-2">${buku.jumlah}</td>
+                `;
+            });
+        }
+
+        // Pengaturan
+        function loadPengaturan() {
+            document.getElementById('tanggalLaporan').value = pengaturan.tanggalLaporan;
+            document.getElementById('namaKepala').value = pengaturan.namaKepala;
+            document.getElementById('nipKepala').value = pengaturan.nipKepala;
+            document.getElementById('logoLaporan').value = pengaturan.logoLaporan;
+            
+            // Load logo preview if exists
+            if (pengaturan.logoLaporan) {
+                const logoPreview = document.getElementById('logoPreview');
+                logoPreview.innerHTML = `
+                    <img src="${pengaturan.logoLaporan}" alt="Logo Preview" class="max-w-32 max-h-32 mx-auto border rounded-lg">
+                    <p class="text-sm text-gray-600 mt-2">Logo saat ini</p>
+                `;
+            }
+        }
+
+        function simpanPengaturan(event) {
+            event.preventDefault();
+            pengaturan.tanggalLaporan = document.getElementById('tanggalLaporan').value;
+            pengaturan.namaKepala = document.getElementById('namaKepala').value;
+            pengaturan.nipKepala = document.getElementById('nipKepala').value;
+            pengaturan.logoLaporan = document.getElementById('logoLaporan').value;
+            
+            localStorage.setItem('pengaturan', JSON.stringify(pengaturan));
+            showNotification('Pengaturan berhasil disimpan!', 'success');
+        }
+
+        // Cetak Laporan
+        function cetakLaporanBuku(format) {
+            if (format === 'pdf') {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Header dengan logo
+                if (pengaturan.logoLaporan) {
+                    try {
+                        doc.addImage(pengaturan.logoLaporan, 'JPEG', 15, 15, 25, 25);
+                    } catch (e) {
+                        console.log('Logo tidak dapat ditambahkan ke PDF');
+                    }
+                }
+                
+                // Judul laporan - tanpa background
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(18);
+                doc.setFont(undefined, 'bold');
+                doc.text('LAPORAN DATA BUKU PERPUSTAKAAN', 105, 20, { align: 'center' });
+                doc.setFontSize(14);
+                doc.text('SMAN 1 AIR HITAM', 105, 28, { align: 'center' });
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text('Jl. Pendidikan No. 1, Air Hitam, Lampung Barat', 105, 35, { align: 'center' });
+                
+                // Garis pemisah
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.5);
+                doc.line(15, 45, 195, 45);
+                
+                // Informasi laporan - tanpa background
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'bold');
+                doc.text('INFORMASI LAPORAN:', 15, 55);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Total Judul Buku: ${dataBuku.length}`, 15, 62);
+                doc.text(`Total Eksemplar: ${dataBuku.reduce((sum, buku) => sum + buku.jumlah, 0)}`, 120, 62);
+                
+                // Header tabel - tanpa background warna
+                let y = 75;
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.3);
+                
+                // Garis atas tabel
+                doc.line(15, y-2, 195, y-2);
+                
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(9);
+                doc.text('NO', 18, y+2);
+                doc.text('NAMA BUKU', 30, y+2);
+                doc.text('KODE BUKU', 115, y+2);
+                doc.text('KONDISI', 145, y+2);
+                doc.text('JUMLAH', 175, y+2);
+                
+                // Garis bawah header
+                doc.line(15, y+5, 195, y+5);
+                
+                // Garis vertikal header
+                doc.line(15, y-2, 15, y+5);
+                doc.line(27, y-2, 27, y+5);
+                doc.line(110, y-2, 110, y+5);
+                doc.line(140, y-2, 140, y+5);
+                doc.line(170, y-2, 170, y+5);
+                doc.line(195, y-2, 195, y+5);
+                
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(8);
+                
+                y += 12;
+                let totalBuku = 0;
+                
+                dataBuku.forEach((buku, index) => {
+                    // Border untuk setiap baris - tanpa background
+                    doc.line(15, y-4, 195, y-4); // garis atas
+                    doc.line(15, y-4, 15, y+6); // garis kiri
+                    doc.line(27, y-4, 27, y+6); // garis kolom 1
+                    doc.line(110, y-4, 110, y+6); // garis kolom 2
+                    doc.line(140, y-4, 140, y+6); // garis kolom 3
+                    doc.line(170, y-4, 170, y+6); // garis kolom 4
+                    doc.line(195, y-4, 195, y+6); // garis kanan
+                    
+                    doc.text((index + 1).toString(), 18, y+1);
+                    doc.text(buku.nama.length > 35 ? buku.nama.substring(0, 35) + '...' : buku.nama, 30, y+1);
+                    doc.text(buku.kode, 115, y+1);
+                    doc.text(buku.kondisi, 145, y+1);
+                    doc.text(buku.jumlah.toString(), 175, y+1);
+                    
+                    totalBuku += buku.jumlah;
+                    y += 10;
+                    
+                    // New page if needed
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 30;
+                    }
+                });
+                
+                // Garis penutup tabel
+                doc.line(15, y-4, 195, y-4);
+                
+                // Total - tanpa background warna
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(10);
+                doc.text(`TOTAL KESELURUHAN: ${dataBuku.length} Judul | ${totalBuku} Eksemplar`, 105, y + 10, { align: 'center' });
+                
+                // Tanda tangan
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(9);
+                const namaKepala = pengaturan.namaKepala || '[Nama Kepala Perpustakaan]';
+                const nipKepala = pengaturan.nipKepala || '';
+                const tanggalLaporan = pengaturan.tanggalLaporan ? new Date(pengaturan.tanggalLaporan).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                
+                doc.text(`Air Hitam, ${tanggalLaporan}`, 140, y + 30);
+                doc.text('Kepala Perpustakaan', 140, y + 38);
+                
+                // Space for signature
+                doc.text(namaKepala, 140, y + 60);
+                if (nipKepala) {
+                    doc.text(`NIP. ${nipKepala}`, 140, y + 68);
+                }
+                
+                doc.save('laporan-data-buku.pdf');
+            } else if (format === 'excel') {
+                const ws = XLSX.utils.json_to_sheet(dataBuku);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Data Buku');
+                XLSX.writeFile(wb, 'laporan-data-buku.xlsx');
+            }
+        }
+
+        function cetakLaporanPeminjaman(format) {
+            if (format === 'pdf') {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const tanggalLaporan = pengaturan.tanggalLaporan ? new Date(pengaturan.tanggalLaporan).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                
+                // Header dengan logo
+                if (pengaturan.logoLaporan) {
+                    try {
+                        doc.addImage(pengaturan.logoLaporan, 'JPEG', 15, 15, 25, 25);
+                    } catch (e) {
+                        console.log('Logo tidak dapat ditambahkan ke PDF');
+                    }
+                }
+                
+                // Judul laporan - tanpa background
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(18);
+                doc.setFont(undefined, 'bold');
+                doc.text('LAPORAN PEMINJAMAN BUKU', 105, 20, { align: 'center' });
+                doc.setFontSize(14);
+                doc.text('SMAN 1 AIR HITAM', 105, 28, { align: 'center' });
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text('Jl. Pendidikan No. 1, Air Hitam, Lampung Barat', 105, 35, { align: 'center' });
+                
+                // Garis pemisah
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.5);
+                doc.line(15, 45, 195, 45);
+                
+                // Informasi laporan - tanpa background
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'bold');
+                doc.text('INFORMASI LAPORAN:', 15, 55);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Total Transaksi: ${dataPeminjaman.length}`, 15, 62);
+                doc.text(`Total Buku Dipinjam: ${dataPeminjaman.reduce((sum, pinjam) => sum + pinjam.jumlah, 0)}`, 120, 62);
+                
+                // Header tabel - tanpa background warna
+                let y = 75;
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.3);
+                
+                // Garis atas tabel
+                doc.line(15, y-2, 195, y-2);
+                
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(9);
+                doc.text('NO', 18, y+2);
+                doc.text('NAMA PEMINJAM', 30, y+2);
+                doc.text('TANGGAL', 75, y+2);
+                doc.text('NAMA BUKU', 105, y+2);
+                doc.text('KODE', 150, y+2);
+                doc.text('JUMLAH', 175, y+2);
+                
+                // Garis bawah header
+                doc.line(15, y+5, 195, y+5);
+                
+                // Garis vertikal header
+                doc.line(15, y-2, 15, y+5);
+                doc.line(27, y-2, 27, y+5);
+                doc.line(70, y-2, 70, y+5);
+                doc.line(100, y-2, 100, y+5);
+                doc.line(145, y-2, 145, y+5);
+                doc.line(170, y-2, 170, y+5);
+                doc.line(195, y-2, 195, y+5);
+                
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(8);
+                
+                y += 12;
+                let totalPinjam = 0;
+                
+                dataPeminjaman.forEach((pinjam, index) => {
+                    // Border untuk setiap baris - tanpa background
+                    doc.line(15, y-4, 195, y-4); // garis atas
+                    doc.line(15, y-4, 15, y+6); // garis kiri
+                    doc.line(27, y-4, 27, y+6); // garis kolom 1
+                    doc.line(70, y-4, 70, y+6); // garis kolom 2
+                    doc.line(100, y-4, 100, y+6); // garis kolom 3
+                    doc.line(145, y-4, 145, y+6); // garis kolom 4
+                    doc.line(170, y-4, 170, y+6); // garis kolom 5
+                    doc.line(195, y-4, 195, y+6); // garis kanan
+                    
+                    doc.text((index + 1).toString(), 18, y+1);
+                    doc.text(pinjam.namaPeminjam.length > 18 ? pinjam.namaPeminjam.substring(0, 18) + '...' : pinjam.namaPeminjam, 30, y+1);
+                    doc.text(pinjam.tanggal, 72, y+1);
+                    doc.text(pinjam.namaBuku.length > 18 ? pinjam.namaBuku.substring(0, 18) + '...' : pinjam.namaBuku, 102, y+1);
+                    doc.text(pinjam.kodeBuku, 147, y+1);
+                    doc.text(pinjam.jumlah.toString(), 175, y+1);
+                    
+                    totalPinjam += pinjam.jumlah;
+                    y += 10;
+                    
+                    // New page if needed
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 30;
+                    }
+                });
+                
+                // Garis penutup tabel
+                doc.line(15, y-4, 195, y-4);
+                
+                // Total - tanpa background warna
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(10);
+                doc.text(`TOTAL PEMINJAMAN: ${dataPeminjaman.length} Transaksi | ${totalPinjam} Eksemplar`, 105, y + 10, { align: 'center' });
+                
+                // Tanda tangan
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(9);
+                const namaKepala = pengaturan.namaKepala || '[Nama Kepala Perpustakaan]';
+                const nipKepala = pengaturan.nipKepala || '';
+                
+                doc.text(`Air Hitam, ${tanggalLaporan}`, 140, y + 30);
+                doc.text('Kepala Perpustakaan', 140, y + 38);
+                
+                // Space for signature
+                doc.text(namaKepala, 140, y + 60);
+                if (nipKepala) {
+                    doc.text(`NIP. ${nipKepala}`, 140, y + 68);
+                }
+                
+                doc.save('laporan-peminjaman.pdf');
+            } else if (format === 'excel') {
+                const ws = XLSX.utils.json_to_sheet(dataPeminjaman);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Data Peminjaman');
+                XLSX.writeFile(wb, 'laporan-peminjaman.xlsx');
+            }
+        }
+
+        function cetakLaporanBukuRusak(format) {
+            if (format === 'pdf') {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const tanggalLaporan = pengaturan.tanggalLaporan ? new Date(pengaturan.tanggalLaporan).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                
+                // Header dengan logo
+                if (pengaturan.logoLaporan) {
+                    try {
+                        doc.addImage(pengaturan.logoLaporan, 'JPEG', 15, 15, 25, 25);
+                    } catch (e) {
+                        console.log('Logo tidak dapat ditambahkan ke PDF');
+                    }
+                }
+                
+                // Judul laporan - tanpa background
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(18);
+                doc.setFont(undefined, 'bold');
+                doc.text('LAPORAN BUKU RUSAK', 105, 20, { align: 'center' });
+                doc.setFontSize(14);
+                doc.text('SMAN 1 AIR HITAM', 105, 28, { align: 'center' });
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text('Jl. Pendidikan No. 1, Air Hitam, Lampung Barat', 105, 35, { align: 'center' });
+                
+                // Garis pemisah
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.5);
+                doc.line(15, 45, 195, 45);
+                
+                // Informasi laporan - tanpa background
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'bold');
+                doc.text('INFORMASI LAPORAN:', 15, 55);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Total Judul Rusak: ${dataBukuRusak.length}`, 15, 62);
+                doc.text(`Total Eksemplar Rusak: ${dataBukuRusak.reduce((sum, buku) => sum + buku.jumlah, 0)}`, 120, 62);
+                
+                // Header tabel - tanpa background warna
+                let y = 75;
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(0.3);
+                
+                // Garis atas tabel
+                doc.line(15, y-2, 195, y-2);
+                
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(9);
+                doc.text('NO', 18, y+2);
+                doc.text('NAMA BUKU', 30, y+2);
+                doc.text('KODE BUKU', 110, y+2);
+                doc.text('TANGGAL RUSAK', 140, y+2);
+                doc.text('JUMLAH', 175, y+2);
+                
+                // Garis bawah header
+                doc.line(15, y+5, 195, y+5);
+                
+                // Garis vertikal header
+                doc.line(15, y-2, 15, y+5);
+                doc.line(27, y-2, 27, y+5);
+                doc.line(105, y-2, 105, y+5);
+                doc.line(135, y-2, 135, y+5);
+                doc.line(170, y-2, 170, y+5);
+                doc.line(195, y-2, 195, y+5);
+                
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(8);
+                
+                y += 12;
+                let totalRusak = 0;
+                
+                dataBukuRusak.forEach((buku, index) => {
+                    // Border untuk setiap baris - tanpa background
+                    doc.line(15, y-4, 195, y-4); // garis atas
+                    doc.line(15, y-4, 15, y+6); // garis kiri
+                    doc.line(27, y-4, 27, y+6); // garis kolom 1
+                    doc.line(105, y-4, 105, y+6); // garis kolom 2
+                    doc.line(135, y-4, 135, y+6); // garis kolom 3
+                    doc.line(170, y-4, 170, y+6); // garis kolom 4
+                    doc.line(195, y-4, 195, y+6); // garis kanan
+                    
+                    doc.text((index + 1).toString(), 18, y+1);
+                    doc.text(buku.nama.length > 30 ? buku.nama.substring(0, 30) + '...' : buku.nama, 30, y+1);
+                    doc.text(buku.kode, 107, y+1);
+                    doc.text(buku.tanggalRusak, 137, y+1);
+                    doc.text(buku.jumlah.toString(), 175, y+1);
+                    
+                    totalRusak += buku.jumlah;
+                    y += 10;
+                    
+                    // New page if needed
+                    if (y > 250) {
+                        doc.addPage();
+                        y = 30;
+                    }
+                });
+                
+                // Garis penutup tabel
+                doc.line(15, y-4, 195, y-4);
+                
+                // Total - tanpa background warna
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(10);
+                doc.text(`TOTAL BUKU RUSAK: ${dataBukuRusak.length} Judul | ${totalRusak} Eksemplar`, 105, y + 10, { align: 'center' });
+                
+                // Tanda tangan
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(9);
+                const namaKepala = pengaturan.namaKepala || '[Nama Kepala Perpustakaan]';
+                const nipKepala = pengaturan.nipKepala || '';
+                
+                doc.text(`Air Hitam, ${tanggalLaporan}`, 140, y + 30);
+                doc.text('Kepala Perpustakaan', 140, y + 38);
+                
+                // Space for signature
+                doc.text(namaKepala, 140, y + 60);
+                if (nipKepala) {
+                    doc.text(`NIP. ${nipKepala}`, 140, y + 68);
+                }
+                
+                doc.save('laporan-buku-rusak.pdf');
+            } else if (format === 'excel') {
+                const ws = XLSX.utils.json_to_sheet(dataBukuRusak);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Buku Rusak');
+                XLSX.writeFile(wb, 'laporan-buku-rusak.xlsx');
+            }
+        }
+
+        // Import Data Excel
+        function importDataExcel() {
+            const fileInput = document.getElementById('fileImport');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showNotification('Pilih file Excel terlebih dahulu!', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[sheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                
+                // Convert to our format
+                jsonData.forEach(row => {
+                    const bukuBaru = {
+                        id: Date.now() + Math.random(),
+                        nama: row.nama || row.Nama || '',
+                        kode: row.kode || row.Kode || '',
+                        kondisi: row.kondisi || row.Kondisi || 'Baik',
+                        jumlah: parseInt(row.jumlah || row.Jumlah || 0)
+                    };
+                    dataBuku.push(bukuBaru);
+                });
+                
+                localStorage.setItem('dataBuku', JSON.stringify(dataBuku));
+                showNotification('Data berhasil diimport!', 'success');
+                tampilkanTabelBuku();
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Backup Data
+        function backupData() {
+            const allData = {
+                dataBuku: dataBuku,
+                dataPeminjaman: dataPeminjaman,
+                dataPengembalian: dataPengembalian,
+                dataBukuRusak: dataBukuRusak,
+                pengaturan: pengaturan
+            };
+            
+            const dataStr = JSON.stringify(allData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = 'backup-data-perpustakaan.json';
+            link.click();
+            
+            showNotification('Data berhasil dibackup!', 'success');
+        }
+
+        // Restore Data
+        function restoreData() {
+            const fileInput = document.getElementById('fileRestore');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showNotification('Pilih file backup terlebih dahulu!', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backupData = JSON.parse(e.target.result);
+                    
+                    dataBuku = backupData.dataBuku || [];
+                    dataPeminjaman = backupData.dataPeminjaman || [];
+                    dataPengembalian = backupData.dataPengembalian || [];
+                    dataBukuRusak = backupData.dataBukuRusak || [];
+                    pengaturan = backupData.pengaturan || {};
+                    
+                    localStorage.setItem('dataBuku', JSON.stringify(dataBuku));
+                    localStorage.setItem('dataPeminjaman', JSON.stringify(dataPeminjaman));
+                    localStorage.setItem('dataPengembalian', JSON.stringify(dataPengembalian));
+                    localStorage.setItem('dataBukuRusak', JSON.stringify(dataBukuRusak));
+                    localStorage.setItem('pengaturan', JSON.stringify(pengaturan));
+                    
+                    showNotification('Data berhasil direstore!', 'success');
+                    loadAllData();
+                } catch (error) {
+                    showNotification('File backup tidak valid!', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Upload Photo
+        function uploadPhoto() {
+            const fileInput = document.getElementById('photoUpload');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const profilePhoto = document.getElementById('profilePhoto');
+                    profilePhoto.innerHTML = `<img src="${e.target.result}" alt="Profile" class="w-full h-full object-cover rounded-full">`;
+                    localStorage.setItem('profilePhoto', e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Upload Logo
+        function uploadLogo() {
+            const fileInput = document.getElementById('logoUpload');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const logoPreview = document.getElementById('logoPreview');
+                    logoPreview.innerHTML = `
+                        <img src="${e.target.result}" alt="Logo Preview" class="max-w-32 max-h-32 mx-auto border rounded-lg">
+                        <p class="text-sm text-gray-600 mt-2">Logo berhasil diupload</p>
+                    `;
+                    
+                    // Simpan logo ke pengaturan
+                    pengaturan.logoLaporan = e.target.result;
+                    localStorage.setItem('pengaturan', JSON.stringify(pengaturan));
+                    
+                    // Update input URL dengan data base64
+                    document.getElementById('logoLaporan').value = e.target.result;
+                    
+                    showNotification('Logo berhasil diupload!', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Load Profile Photo
+        function loadProfilePhoto() {
+            const savedPhoto = localStorage.getItem('profilePhoto');
+            if (savedPhoto) {
+                const profilePhoto = document.getElementById('profilePhoto');
+                profilePhoto.innerHTML = `<img src="${savedPhoto}" alt="Profile" class="w-full h-full object-cover rounded-full">`;
+            }
+        }
+
+        // Show Notification
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg text-white z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProfilePhoto();
+            // Set today's date as default
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('tanggalPinjam').value = today;
+            document.getElementById('tanggalKembali').value = today;
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9908fa855205a396',t:'MTc2MDgwMDQwMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
